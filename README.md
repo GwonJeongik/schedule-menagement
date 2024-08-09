@@ -6,4 +6,4 @@
 |  일정 수정   |   `POST`    | URL | 요청 body  |  수정 정보   |     200: 정상수정      |
 |  일정 삭제   |  `DELETE`   | URL | 요청 param |    -     |     200: 정상삭제      |
 
-![Copy of Schedule](https://github.com/user-attachments/assets/a49cce20-876c-46a0-8067-699373441329)
+![Copy of Schedule](https://github.com/user-attachments/assets/f912a0a9-4ca0-44fb-9c37-abdf6e842a8e)
