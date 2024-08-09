@@ -1,10 +1,10 @@
-package com.personaltask.schedulemenagement;
+package com.personaltask.schedulemanagement;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ScheduleMenagementApplicationTests {
+class ScheduleManagementApplicationTests {
 
 	@Test
 	void contextLoads() {

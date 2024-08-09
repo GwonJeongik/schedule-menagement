@@ -1,13 +1,13 @@
-package com.personaltask.schedulemenagement;
+package com.personaltask.schedulemanagement;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ScheduleMenagementApplication {
+public class ScheduleManagementApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ScheduleMenagementApplication.class, args);
+		SpringApplication.run(ScheduleManagementApplication.class, args);
 	}
 
 }
