@@ -4,8 +4,8 @@ create table schedule
     schedule_password varchar(10),
     task              varchar(20),
     admin_name        varchar(10),
-    registration_date Date,
-    modification_date Date,
+    registration_date datetime,
+    modification_date datetime,
     primary key (schedule_id)
 );
 
