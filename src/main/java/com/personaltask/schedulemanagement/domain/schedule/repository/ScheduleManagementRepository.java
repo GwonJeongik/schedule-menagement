@@ -1,6 +1,7 @@
 package com.personaltask.schedulemanagement.domain.schedule.repository;
 
-import com.personaltask.schedulemanagement.domain.schedule.model.Schedule;
+import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
+import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.support.JdbcUtils;
@@ -18,7 +19,7 @@ import java.util.UUID;
 
 @Repository
 @Slf4j
-public class ScheduleManagementRepository implements AutoCloseable, ManagementRepository<Schedule> {
+public class ScheduleManagementRepository implements AutoCloseable, ManagementRepository<RequestScheduleDto, ResponseScheduleDto> {
 
     private final DataSource dataSource;
     private Connection connection;
@@ -37,7 +38,7 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
      * DB에 schedule을 저장한다.
      */
     @Override
-    public Schedule save(Schedule schedule) throws SQLException {
+    public ResponseScheduleDto save(RequestScheduleDto requestScheduleDto) throws SQLException {
 
         try (ScheduleManagementRepository repository = new ScheduleManagementRepository(dataSource)) {
             String sql = "insert into Schedule" +
@@ -54,13 +55,12 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
             connection = dataSource.getConnection();
             pstmt = connection.prepareStatement(sql);
 
-            putValueInPstmt(schedule);
+            putValueInPstmt(requestScheduleDto);
 
-            int count = pstmt.executeUpdate(); // 쿼리문 실행
-            log.info("등록된 수={}", count);
+            pstmt.execute(); // 쿼리문 실행
 
             // 저장한 schedule을 반환한다.
-            return schedule;
+            return new ResponseScheduleDto(requestScheduleDto);
 
         } catch (SQLException e) {
             log.error("repository save error={}", e.getMessage());
@@ -71,31 +71,29 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
     /**
      * preparedStatement에 쿼리문 value 값을 넣어준다.
      */
-    private void putValueInPstmt(Schedule schedule) throws SQLException {
+    private void putValueInPstmt(RequestScheduleDto requestScheduleDto) throws SQLException {
         // 스케쥴 아이디 생성
         String scheduleId = UUID.randomUUID().toString();
         // 스케쥴 생성 시간 -> 요구사항에 맞게 포멧팅 -> 나노초 부분 삭제
-        String date = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-        schedule.setScheduleId(scheduleId);
-        schedule.setRegistrationDate(date);
-        schedule.setModificationDate(date);
+        requestScheduleDto.setScheduleId(scheduleId);
+        requestScheduleDto.setRegistrationDate(date);
+        requestScheduleDto.setModificationDate(date);
 
         pstmt.setString(1, scheduleId); // 고유 id 자동 생성
-        pstmt.setString(2, schedule.getSchedulePassword());
-        pstmt.setString(3, schedule.getTask());
-        pstmt.setString(4, schedule.getAdminName());
+        pstmt.setString(2, requestScheduleDto.getSchedulePassword());
+        pstmt.setString(3, requestScheduleDto.getTask());
+        pstmt.setString(4, requestScheduleDto.getAdminName());
         pstmt.setString(5, date); // 날짜 + 시간
         pstmt.setString(6, date); // 날짜 + 시간
-
     }
 
     /**
      * 아이디로 DB에 저장된 데이터를 찾을 수 있다.
      */
     @Override
-    public Schedule findById(String scheduleId) throws SQLException {
+    public ResponseScheduleDto findById(String scheduleId) throws SQLException {
 
         String sql = "select * from schedule where schedule_id = ?"; // 실행할 쿼리문 -> 스케쥴 아이디와 일치하는 놈을 찾아온다.
 
@@ -127,22 +125,24 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
     /**
      * resultSet(쿼리 실행 결과 - 조회)의 값을 새로운 Schedule 객체에 담아서 반환
      */
-    private Schedule getSchedule() throws SQLException {
-        Schedule schedule = new Schedule();
-        schedule.setScheduleId(resultSet.getString("schedule_id"));
-        schedule.setTask(resultSet.getString("task"));
-        schedule.setAdminName(resultSet.getString("admin_name"));
-        return schedule;
+    private ResponseScheduleDto getSchedule() throws SQLException {
+        ResponseScheduleDto responseScheduleDto = new ResponseScheduleDto();
+        responseScheduleDto.setScheduleId(resultSet.getString("schedule_id"));
+        responseScheduleDto.setTask(resultSet.getString("task"));
+        responseScheduleDto.setAdminName(resultSet.getString("admin_name"));
+        responseScheduleDto.setRegistrationDate(resultSet.getString("registration_date"));
+        responseScheduleDto.setModificationDate(resultSet.getString("modification_date"));
+        return responseScheduleDto;
     }
 
     public void findAll() {
     }
 
-    public Schedule modify(Schedule schedule) {
+    public ResponseScheduleDto modify(RequestScheduleDto requestScheduleDto) {
         return null;
     }
 
-    public void delete(Schedule schedule) {
+    public void delete(RequestScheduleDto requestScheduleDto) {
         String sql = "delete from schedule where schedule_id = ?";
     }
 

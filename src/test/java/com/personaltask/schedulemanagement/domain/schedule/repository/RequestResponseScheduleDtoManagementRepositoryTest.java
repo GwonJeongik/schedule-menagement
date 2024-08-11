@@ -1,6 +1,7 @@
 package com.personaltask.schedulemanagement.domain.schedule.repository;
 
-import com.personaltask.schedulemanagement.domain.schedule.model.Schedule;
+import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
+import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
 import jdk.jfr.Name;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -14,11 +15,11 @@ import java.sql.SQLException;
 import static com.personaltask.schedulemanagement.domain.schedule.Constant.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ScheduleManagementRepositoryTest {
+class RequestResponseScheduleDtoManagementRepositoryTest {
 
     DataSource dataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
 
-    ManagementRepository<Schedule> managementRepository = new ScheduleManagementRepository(dataSource);
+    ManagementRepository<RequestScheduleDto, ResponseScheduleDto> managementRepository = new ScheduleManagementRepository(dataSource);
 
     @AfterEach
     void afterEach() throws SQLException {
@@ -39,17 +40,15 @@ class ScheduleManagementRepositoryTest {
     @Name("스케쥴 저장 && 단일 조회")
     void save() throws SQLException {
         //given
-        Schedule schedule = new Schedule();
-        schedule.setSchedulePassword("1234");
-        schedule.setTask("화장실 가기");
-        schedule.setAdminName("권정익");
+        RequestScheduleDto requestScheduleDto
+                = new RequestScheduleDto("1234", "화장실 가기", "권정익");
 
         //when
-        Schedule savedSchedule = managementRepository.save(schedule);
+        ResponseScheduleDto saveResponseSchedule = managementRepository.save(requestScheduleDto);
 
         //then
-        Schedule findSchedule = managementRepository.findById(savedSchedule.getScheduleId());
-        assertThat(savedSchedule).isEqualTo(findSchedule);
+        ResponseScheduleDto findRequestScheduleDto = managementRepository.findById(saveResponseSchedule.getScheduleId());
+        assertThat(saveResponseSchedule).isEqualTo(findRequestScheduleDto);
     }
 
     @Test

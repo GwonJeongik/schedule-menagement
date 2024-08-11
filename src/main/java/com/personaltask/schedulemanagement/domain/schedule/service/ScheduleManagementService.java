@@ -1,7 +1,7 @@
 package com.personaltask.schedulemanagement.domain.schedule.service;
 
-import com.personaltask.schedulemanagement.domain.schedule.model.Schedule;
-import com.personaltask.schedulemanagement.domain.schedule.model.dto.ScheduleDto;
+import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
+import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
 import com.personaltask.schedulemanagement.domain.schedule.repository.ManagementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,26 +9,23 @@ import org.springframework.stereotype.Service;
 import java.sql.SQLException;
 
 @Service
-public class ScheduleManagementService implements ManagementService<Schedule, ScheduleDto> {
+public class ScheduleManagementService implements ManagementService<RequestScheduleDto, ResponseScheduleDto> {
 
-    private final ManagementRepository<Schedule> repository;
+    private final ManagementRepository<RequestScheduleDto, ResponseScheduleDto> repository;
 
     @Autowired
-    public ScheduleManagementService(ManagementRepository<Schedule> repository) {
+    public ScheduleManagementService(ManagementRepository<RequestScheduleDto, ResponseScheduleDto> repository) {
         this.repository = repository;
     }
 
     @Override
-    public ScheduleDto callSave(Schedule schedule) throws SQLException {
-        // 반환값이 필요가 없긴 한데...
-        Schedule saveSchedule = repository.save(schedule);
-
-        return new ScheduleDto(saveSchedule);
+    public ResponseScheduleDto callSave(RequestScheduleDto requestScheduleDto) throws SQLException {
+        // requestScheduleDto에 대한 검증 필요
+        return repository.save(requestScheduleDto);
     }
 
     @Override
-    public ScheduleDto callFindById(String id) throws SQLException {
-        Schedule findSchedule = repository.findById(id);
+    public ResponseScheduleDto callFindById(String id) throws SQLException {
         return null;
     }
 
@@ -38,12 +35,12 @@ public class ScheduleManagementService implements ManagementService<Schedule, Sc
     }
 
     @Override
-    public ScheduleDto callUpdate(Schedule schedule) {
+    public ResponseScheduleDto callUpdate(RequestScheduleDto requestScheduleDto) {
         return null;
     }
 
     @Override
-    public void callDelete(Schedule schedule) {
+    public void callDelete(RequestScheduleDto requestScheduleDto) {
 
     }
 }

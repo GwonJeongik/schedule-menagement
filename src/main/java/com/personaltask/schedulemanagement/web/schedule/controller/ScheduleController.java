@@ -1,7 +1,7 @@
-package com.personaltask.schedulemanagement.domain.schedule.controller;
+package com.personaltask.schedulemanagement.web.schedule.controller;
 
-import com.personaltask.schedulemanagement.domain.schedule.model.Schedule;
-import com.personaltask.schedulemanagement.domain.schedule.model.dto.ScheduleDto;
+import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
+import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
 import com.personaltask.schedulemanagement.domain.schedule.service.ManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,22 +18,22 @@ import java.util.Objects;
 public class ScheduleController {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final ManagementService<Schedule, ScheduleDto> service;
+    private final ManagementService<RequestScheduleDto, ResponseScheduleDto> service;
 
     @Autowired
-    public ScheduleController(ManagementService<Schedule, ScheduleDto> service) {
+    public ScheduleController(ManagementService<RequestScheduleDto, ResponseScheduleDto> service) {
         this.service = service;
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ScheduleDto> saveSchedule(@RequestBody Schedule schedule) throws SQLException {
+    public ResponseEntity<ResponseScheduleDto> saveSchedule(@RequestBody RequestScheduleDto requestScheduleDto) throws SQLException {
         try {
-            if (Objects.isNull(schedule.getTask())) {
+            if (Objects.isNull(requestScheduleDto.getTask())) {
                 throw new IllegalArgumentException("스케쥴이 비어있습니다.");
             }
-            ScheduleDto saveScheduleDto = service.callSave(schedule);
+            ResponseScheduleDto saveResponseScheduleDto = service.callSave(requestScheduleDto);
 
-            return new ResponseEntity<>(saveScheduleDto, HttpStatus.OK);
+            return new ResponseEntity<>(saveResponseScheduleDto, HttpStatus.OK);
 
         } catch (RuntimeException e) {
             log.error("error log={}", e.getMessage());
@@ -42,7 +42,7 @@ public class ScheduleController {
     }
 
     @GetMapping
-    public void findScheduleById(@RequestBody Schedule schedule) throws SQLException {
+    public void findScheduleById(@RequestBody RequestScheduleDto requestScheduleDto) throws SQLException {
     }
 //
 //    @GetMapping

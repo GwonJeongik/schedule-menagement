@@ -1,7 +1,5 @@
 package com.personaltask.schedulemanagement.domain.schedule.repository;
 
-import com.personaltask.schedulemanagement.domain.schedule.model.Schedule;
-
 import java.sql.SQLException;
 
 /**
@@ -12,15 +10,15 @@ import java.sql.SQLException;
  *
  * 제네릭을 이용하면 admin 객체 || schedule 객체를 받을 수 있다.
  */
-public interface ManagementRepository<T> {
+public interface ManagementRepository<T, D> {
 
-    public T save(T t)throws SQLException;
+    public D save(T t)throws SQLException;
 
-    public T findById(String id) throws SQLException;
+    public D findById(String id) throws SQLException;
 
     public void findAll();
 
-    public T modify(T t);
+    public D modify(T t);
 
     public void delete(T t);
 }

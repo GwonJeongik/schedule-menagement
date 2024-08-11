@@ -1,4 +1,4 @@
-create table schedule
+create table requestScheduleDto
 (
     schedule_id       varchar(36),
     schedule_password varchar(10),

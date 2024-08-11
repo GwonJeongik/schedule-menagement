@@ -1,11 +1,9 @@
-package com.personaltask.schedulemanagement.domain.schedule.model;
+package com.personaltask.schedulemanagement.domain.schedule.dto;
 
 import lombok.Data;
 
-import java.util.Date;
-
 @Data
-public class Schedule {
+public class RequestScheduleDto {
 
     private String scheduleId;
     private String schedulePassword; // 비밀번호
@@ -14,10 +12,7 @@ public class Schedule {
     private String registrationDate; // 작성일
     private String modificationDate; // 수정일
 
-    public Schedule() {
-    }
-
-    public Schedule(String schedulePassword, String task, String adminName) {
+    public RequestScheduleDto(String schedulePassword, String task, String adminName) {
         this.schedulePassword = schedulePassword;
         this.task = task;
         this.adminName = adminName;
