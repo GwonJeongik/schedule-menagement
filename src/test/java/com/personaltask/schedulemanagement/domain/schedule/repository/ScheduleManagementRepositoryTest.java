@@ -14,11 +14,11 @@ import java.sql.SQLException;
 import static com.personaltask.schedulemanagement.domain.schedule.Constant.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ScheduleRepositoryTest {
+class ScheduleManagementRepositoryTest {
 
     DataSource dataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
 
-    Repository repository = new ScheduleRepository(dataSource);
+    ManagementRepository<Schedule> managementRepository = new ScheduleManagementRepository(dataSource);
 
     @AfterEach
     void afterEach() throws SQLException {
@@ -39,13 +39,16 @@ class ScheduleRepositoryTest {
     @Name("스케쥴 저장 && 단일 조회")
     void save() throws SQLException {
         //given
-        Schedule schedule = new Schedule("1234", "밥 먹기", "권정익");
+        Schedule schedule = new Schedule();
+        schedule.setSchedulePassword("1234");
+        schedule.setTask("화장실 가기");
+        schedule.setAdminName("권정익");
 
         //when
-        Schedule savedSchedule = repository.save(schedule);
+        Schedule savedSchedule = managementRepository.save(schedule);
 
         //then
-        Schedule findSchedule = repository.findById(savedSchedule.getScheduleId());
+        Schedule findSchedule = managementRepository.findById(savedSchedule.getScheduleId());
         assertThat(savedSchedule).isEqualTo(findSchedule);
     }
 
