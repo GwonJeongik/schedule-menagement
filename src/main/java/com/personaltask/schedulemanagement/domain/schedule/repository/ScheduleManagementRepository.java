@@ -35,6 +35,7 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
     }
 
     /**
+     * 레벨 1
      * DB에 schedule을 저장한다.
      */
     @Override
@@ -90,6 +91,7 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
     }
 
     /**
+     * 레벨 2
      * 아이디로 DB에 저장된 데이터를 찾을 수 있다.
      */
     @Override
@@ -114,18 +116,14 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
             }
 
             // 스케쥴 아이디와 일치하는 데이터를 Schedule 객체에 감싸서(담아서) 반환한다.
-            return getSchedule();
-
-        } catch (NoSuchElementException e) {
-            System.out.println("[예외 발생]: " + e.getMessage());
-            throw e;
+            return getResponseSchedule();
         }
     }
 
     /**
      * resultSet(쿼리 실행 결과 - 조회)의 값을 새로운 Schedule 객체에 담아서 반환
      */
-    private ResponseScheduleDto getSchedule() throws SQLException {
+    private ResponseScheduleDto getResponseSchedule() throws SQLException {
         ResponseScheduleDto responseScheduleDto = new ResponseScheduleDto();
         responseScheduleDto.setScheduleId(resultSet.getString("schedule_id"));
         responseScheduleDto.setTask(resultSet.getString("task"));

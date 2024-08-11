@@ -20,13 +20,14 @@ public class ScheduleManagementService implements ManagementService<RequestSched
 
     @Override
     public ResponseScheduleDto callSave(RequestScheduleDto requestScheduleDto) throws SQLException {
-        // requestScheduleDto에 대한 검증 필요
+        // requestScheduleDto에 대한 검증 필요?
         return repository.save(requestScheduleDto);
     }
 
     @Override
-    public ResponseScheduleDto callFindById(String id) throws SQLException {
-        return null;
+    public ResponseScheduleDto callFindById(RequestScheduleDto requestScheduleDto) throws SQLException {
+        String scheduleId = requestScheduleDto.getScheduleId();
+        return repository.findById(scheduleId);
     }
 
     @Override

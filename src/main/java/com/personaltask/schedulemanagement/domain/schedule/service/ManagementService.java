@@ -6,7 +6,7 @@ public interface ManagementService<T,D>  {
 
     public D callSave(T t) throws SQLException;
 
-    public D callFindById(String id) throws SQLException;
+    public D callFindById(T t) throws SQLException;
 
     public void callFindAll();
 

@@ -33,6 +33,9 @@ class RequestResponseScheduleDtoManagementRepositoryTest {
     @Test
     @Name("스케쥴 모두 조회")
     void findAll() throws SQLException {
+        //given
+        //when
+        //then
     }
 
 
@@ -54,10 +57,16 @@ class RequestResponseScheduleDtoManagementRepositoryTest {
     @Test
     @Name("스케쥴 수정")
     void modify() {
+        //given
+        //when
+        //then
     }
 
     @Test
     @Name("스케쥴 삭제")
     void delete() {
+        //given
+        //when
+        //then
     }
 }
