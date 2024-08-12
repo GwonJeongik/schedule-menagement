@@ -1,6 +1,7 @@
 package com.personaltask.schedulemanagement.domain.schedule.repository;
 
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * AdminRepository에도 쓰고 싶은데...
@@ -16,9 +17,9 @@ public interface ManagementRepository<T, D> {
 
     public D findById(String id) throws SQLException;
 
-    public void findAll();
+    public List<D> findAll(T t) throws SQLException;
 
-    public D modify(T t);
+    public void update(T t) throws SQLException;
 
     public void delete(T t);
 }

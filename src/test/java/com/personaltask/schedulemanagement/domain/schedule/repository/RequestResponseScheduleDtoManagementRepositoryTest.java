@@ -56,7 +56,7 @@ class RequestResponseScheduleDtoManagementRepositoryTest {
 
     @Test
     @Name("스케쥴 수정")
-    void modify() {
+    void update() {
         //given
         //when
         //then

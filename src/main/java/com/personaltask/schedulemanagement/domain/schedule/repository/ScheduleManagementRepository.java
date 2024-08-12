@@ -14,12 +14,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 @Slf4j
-public class ScheduleManagementRepository implements AutoCloseable, ManagementRepository<RequestScheduleDto, ResponseScheduleDto> {
+public class ScheduleManagementRepository
+        implements AutoCloseable, ManagementRepository<RequestScheduleDto, ResponseScheduleDto> {
 
     private final DataSource dataSource;
     private Connection connection;
@@ -58,7 +58,7 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
 
             putValueInPstmt(requestScheduleDto);
 
-            pstmt.execute(); // 쿼리문 실행
+            pstmt.executeUpdate(); // 쿼리문 실행
 
             // 저장한 schedule을 반환한다.
             return new ResponseScheduleDto(requestScheduleDto);
@@ -133,11 +133,68 @@ public class ScheduleManagementRepository implements AutoCloseable, ManagementRe
         return responseScheduleDto;
     }
 
-    public void findAll() {
+    /**
+     * 날짜와 담당자가 일치하는 일정 모두 찾기
+     * 날짜만 일치, 담당자만 일치는 아직 구현 x -> 문제가 이해하기 어렵게 표시되어있음.
+     */
+    public List<ResponseScheduleDto> findAll(RequestScheduleDto requestScheduleDto) throws SQLException {
+        String sql= "select * from schedule " +
+                "where (date(modification_date) = ? or ? is null) and (admin_name = ? or ? is null) " +
+                "order by modification_date desc";
+
+        connection = dataSource.getConnection();
+        pstmt = connection.prepareStatement(sql);
+
+        pstmt.setString(1, requestScheduleDto.getModificationDate());
+        pstmt.setString(2, requestScheduleDto.getModificationDate());
+        pstmt.setString(3, requestScheduleDto.getAdminName());
+        pstmt.setString(4, requestScheduleDto.getAdminName());
+
+        pstmt.execute();
+
+        resultSet = pstmt.getResultSet();
+
+        if (Objects.isNull(resultSet)) {
+            throw new NoSuchElementException(
+                    "등록된 스케쥴이 없습니다. 요청 수정일: " + requestScheduleDto.getModificationDate()
+            );
+        }
+
+        ArrayList<ResponseScheduleDto> responseScheduleList = new ArrayList<>();
+
+        while (resultSet.next()){
+            responseScheduleList.add(getResponseSchedule());
+        };
+
+        return responseScheduleList;
     }
 
-    public ResponseScheduleDto modify(RequestScheduleDto requestScheduleDto) {
-        return null;
+    /**
+     * 등록된 스케쥴의 할 일과 담당자명을 변경
+     * 둘 중 하나만 들어와도 들어온 값만 변경
+     *
+     */
+    public void update(RequestScheduleDto requestScheduleDto) throws SQLException {
+        String sql = "update schedule " +
+                "set modification_date = ?, " + // 1
+                "task = case when ? is not null then ? else task end, " + // 2
+                "admin_name = case when ? is not null then ? else admin_name end " + //2
+                "where schedule_id = ? and schedule_password = ?"; // 2
+
+        connection = dataSource.getConnection();
+        pstmt = connection.prepareStatement(sql);
+
+        String newModificationDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        pstmt.setString(1, newModificationDate);
+        pstmt.setString(2, requestScheduleDto.getTask());
+        pstmt.setString(3, requestScheduleDto.getTask());
+        pstmt.setString(4, requestScheduleDto.getAdminName());
+        pstmt.setString(5, requestScheduleDto.getAdminName());
+        pstmt.setString(6, requestScheduleDto.getScheduleId());
+        pstmt.setString(7, requestScheduleDto.getSchedulePassword());
+
+        pstmt.executeUpdate();
     }
 
     public void delete(RequestScheduleDto requestScheduleDto) {

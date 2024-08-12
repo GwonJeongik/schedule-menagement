@@ -12,9 +12,4 @@ public class RequestScheduleDto {
     private String registrationDate; // 작성일
     private String modificationDate; // 수정일
 
-    public RequestScheduleDto(String schedulePassword, String task, String adminName) {
-        this.schedulePassword = schedulePassword;
-        this.task = task;
-        this.adminName = adminName;
-    }
 }

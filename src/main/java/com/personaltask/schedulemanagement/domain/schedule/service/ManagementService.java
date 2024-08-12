@@ -1,6 +1,7 @@
 package com.personaltask.schedulemanagement.domain.schedule.service;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public interface ManagementService<T,D>  {
 
@@ -8,9 +9,9 @@ public interface ManagementService<T,D>  {
 
     public D callFindById(T t) throws SQLException;
 
-    public void callFindAll();
+    public List<D> callFindAll(T t) throws SQLException;
 
-    public D callUpdate(T t);
+    public D callUpdate(T t) throws SQLException;
 
     public void callDelete(T t);
 }
