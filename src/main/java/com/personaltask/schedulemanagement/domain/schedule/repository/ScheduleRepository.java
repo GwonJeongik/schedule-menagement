@@ -3,7 +3,6 @@ package com.personaltask.schedulemanagement.domain.schedule.repository;
 import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
 import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.stereotype.Repository;
 
@@ -18,16 +17,14 @@ import java.util.*;
 
 @Repository
 @Slf4j
-public class ScheduleManagementRepository
-        implements AutoCloseable, ManagementRepository<RequestScheduleDto, ResponseScheduleDto> {
+public class ScheduleRepository implements AutoCloseable {
 
     private final DataSource dataSource;
     private Connection connection;
     private PreparedStatement pstmt;
     private ResultSet resultSet;
 
-    @Autowired
-    public ScheduleManagementRepository(DataSource dataSource) {
+    public ScheduleRepository(DataSource dataSource) {
         this.dataSource = dataSource;
         connection = null;
         pstmt = null;
@@ -38,10 +35,16 @@ public class ScheduleManagementRepository
      * 레벨 1
      * DB에 schedule을 저장한다.
      */
-    @Override
-    public ResponseScheduleDto save(RequestScheduleDto requestScheduleDto) throws SQLException {
+    public ResponseScheduleDto save(RequestScheduleDto requestScheduleDto) {
 
-        try (ScheduleManagementRepository repository = new ScheduleManagementRepository(dataSource)) {
+        // 확인 부분에서 어렵다.
+        try (ScheduleRepository repository = new ScheduleRepository(dataSource)) {
+
+            // 신박한 거~ text block(텍스트 블럭)
+            String a = """  
+                    insert into schedule (schedule_id, schedule_password, task, admin_name, registration_date, modification_date) values(?, ?,?,?,?,?)
+                    """;
+
             String sql = "insert into Schedule" +
                     "(" +
                     "schedule_id," +
@@ -65,7 +68,7 @@ public class ScheduleManagementRepository
 
         } catch (SQLException e) {
             log.error("repository save error={}", e.getMessage());
-            throw e;
+            return null;
         }
     }
 
@@ -94,7 +97,6 @@ public class ScheduleManagementRepository
      * 레벨 2
      * 아이디로 DB에 저장된 데이터를 찾을 수 있다.
      */
-    @Override
     public ResponseScheduleDto findById(String scheduleId) throws SQLException {
 
         String sql = "select * from schedule where schedule_id = ?"; // 실행할 쿼리문 -> 스케쥴 아이디와 일치하는 놈을 찾아온다.
@@ -103,7 +105,7 @@ public class ScheduleManagementRepository
          * try with resource -> 사용한 자원을 반납한다.
          * close 메서드를 호출
          */
-        try (ScheduleManagementRepository repository = new ScheduleManagementRepository(dataSource)) {
+        try (ScheduleRepository repository = new ScheduleRepository(dataSource)) {
             connection = dataSource.getConnection();
             pstmt = connection.prepareStatement(sql);
             pstmt.setString(1, scheduleId);
@@ -177,8 +179,10 @@ public class ScheduleManagementRepository
     public void update(RequestScheduleDto requestScheduleDto) throws SQLException {
         String sql = "update schedule " +
                 "set modification_date = ?, " + // 1
-                "task = case when ? is not null then ? else task end, " + // 2
-                "admin_name = case when ? is not null then ? else admin_name end " + //2
+                "task = case when ? is not null and ? <> '' then ? " +
+                "else task end, " + // 2
+                "admin_name = case when ? is not null and ? <> '' then ? " +
+                "else admin_name end " + //2
                 "where schedule_id = ? and schedule_password = ?"; // 2
 
         connection = dataSource.getConnection();
@@ -189,10 +193,12 @@ public class ScheduleManagementRepository
         pstmt.setString(1, newModificationDate);
         pstmt.setString(2, requestScheduleDto.getTask());
         pstmt.setString(3, requestScheduleDto.getTask());
-        pstmt.setString(4, requestScheduleDto.getAdminName());
+        pstmt.setString(4, requestScheduleDto.getTask());
         pstmt.setString(5, requestScheduleDto.getAdminName());
-        pstmt.setString(6, requestScheduleDto.getScheduleId());
-        pstmt.setString(7, requestScheduleDto.getSchedulePassword());
+        pstmt.setString(6, requestScheduleDto.getAdminName());
+        pstmt.setString(7, requestScheduleDto.getAdminName());
+        pstmt.setString(8, requestScheduleDto.getScheduleId());
+        pstmt.setString(9, requestScheduleDto.getSchedulePassword());
 
         pstmt.executeUpdate();
     }

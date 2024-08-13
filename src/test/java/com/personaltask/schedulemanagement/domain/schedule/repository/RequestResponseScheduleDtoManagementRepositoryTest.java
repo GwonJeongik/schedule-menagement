@@ -19,7 +19,7 @@ class RequestResponseScheduleDtoManagementRepositoryTest {
 
     DataSource dataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
 
-    ManagementRepository<RequestScheduleDto, ResponseScheduleDto> managementRepository = new ScheduleManagementRepository(dataSource);
+    ScheduleRepository managementRepository = new ScheduleRepository(dataSource);
 
     @AfterEach
     void afterEach() throws SQLException {
@@ -44,7 +44,7 @@ class RequestResponseScheduleDtoManagementRepositoryTest {
     void save() throws SQLException {
         //given
         RequestScheduleDto requestScheduleDto
-                = new RequestScheduleDto("1234", "화장실 가기", "권정익");
+                = new RequestScheduleDto();
 
         //when
         ResponseScheduleDto saveResponseSchedule = managementRepository.save(requestScheduleDto);

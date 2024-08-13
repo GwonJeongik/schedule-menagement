@@ -1,11 +1,10 @@
-package com.personaltask.schedulemanagement.web.schedule.controller;
+package com.personaltask.schedulemanagement.domain.schedule.controller;
 
 import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
 import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
-import com.personaltask.schedulemanagement.domain.schedule.service.ManagementService;
+import com.personaltask.schedulemanagement.domain.schedule.service.ScheduleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,56 +18,48 @@ import java.util.Objects;
 public class ScheduleController {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ManagementService<RequestScheduleDto, ResponseScheduleDto> service;
+    private final ScheduleService service;
 
-    @Autowired
-    public ScheduleController(ManagementService<RequestScheduleDto, ResponseScheduleDto> service) {
+    public ScheduleController(ScheduleService service) {
         this.service = service;
     }
 
+    // Get -> @RequestBody X
     @GetMapping
-    public ResponseEntity<List<ResponseScheduleDto>> findAllSchedule(@RequestBody RequestScheduleDto requestScheduleDto) throws SQLException {
+    public ResponseEntity<List<ResponseScheduleDto>> findAllSchedule(
+            @RequestParam String modificationDate,
+            @RequestParam String adminName
+    ) {
 
         try {
-            if (requestScheduleDto.getModificationDate().isEmpty()) {
-                throw new IllegalArgumentException("수정일을 입력하세요.");
-            }
-
-            if (requestScheduleDto.getAdminName().isEmpty()) {
-                throw new IllegalArgumentException("담당자명을 입력하세요.");
-            }
-
-            List<ResponseScheduleDto> responseScheduleDtos = service.callFindAll(requestScheduleDto);
+            List<ResponseScheduleDto> responseScheduleDtos = service.callFindAll();
 
             return new ResponseEntity<>(responseScheduleDtos, HttpStatus.OK);
 
         } catch (RuntimeException e) {
             log.error("error log = ", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-   }
-
-    @PostMapping()
-    public ResponseEntity<ResponseScheduleDto> saveSchedule(@RequestBody RequestScheduleDto requestScheduleDto) throws SQLException {
-
-        try {
-            if (Objects.isNull(requestScheduleDto.getTask())) {
-                throw new IllegalArgumentException("스케쥴이 비어있습니다.");
-            }
-            ResponseScheduleDto saveResponseScheduleDto = service.callSave(requestScheduleDto);
-
-            return new ResponseEntity<>(saveResponseScheduleDto, HttpStatus.OK);
-
-        } catch (RuntimeException e) {
+        } catch (SQLException e) {
             log.error("error log = ", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
+    // **요청과 응답 controller 역할**
+    @PostMapping()
+    public ResponseEntity<ResponseScheduleDto> saveSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
+
+            ResponseScheduleDto saveResponseScheduleDto = service.callSave(requestScheduleDto);
+
+            return new ResponseEntity<>(saveResponseScheduleDto, HttpStatus.OK);
+
+    }
+
+    // 고유 식별자만 받음
     @GetMapping("/find-schedule")
     public ResponseEntity<ResponseScheduleDto> findScheduleById(
             @RequestBody RequestScheduleDto requestScheduleDto
-    ) throws SQLException {
+    ) {
 
         try {
             if (requestScheduleDto.getScheduleId().isEmpty()) {
@@ -84,18 +75,22 @@ public class ScheduleController {
         } catch (RuntimeException e) {
             log.error("error log = ", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (SQLException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
     // 할 일 담당자명
-    @PostMapping("/update-schedule")
+    // patch vs put
+    // api 명세서 patch 사용 이유
+    @PatchMapping("/update-schedule")
     public ResponseEntity<ResponseScheduleDto> updateSchedule(
             @RequestBody RequestScheduleDto requestScheduleDto
     ) throws SQLException {
 
         try {
             if (requestScheduleDto.getTask().isEmpty() && requestScheduleDto.getAdminName().isEmpty()) {
-                throw new IllegalArgumentException("변경할 할 일 내용과 담당자명이 비어있습니다.");
+                throw new IllegalArgumentException("변경할 할 일 내용과 담당자명중 하나는 필요합니다.");
             }
 
             ResponseScheduleDto responseScheduleDto = service.callUpdate(requestScheduleDto);
