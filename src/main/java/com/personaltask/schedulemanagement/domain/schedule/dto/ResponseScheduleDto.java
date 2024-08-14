@@ -3,8 +3,6 @@ package com.personaltask.schedulemanagement.domain.schedule.dto;
 import com.personaltask.schedulemanagement.domain.schedule.entity.Schedule;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 public class ResponseScheduleDto {
 

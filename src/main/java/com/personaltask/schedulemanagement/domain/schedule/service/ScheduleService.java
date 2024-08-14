@@ -4,26 +4,26 @@ import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDt
 import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
 import com.personaltask.schedulemanagement.domain.schedule.entity.Schedule;
 import com.personaltask.schedulemanagement.domain.schedule.repository.ScheduleRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-@Slf4j
-@Service
+
+
 // 제네릭은 좀 무겁다.
 // 에러 처리 컨트롤러 vs 서비스
 // GetMapping -> body를 사용 x
+@Slf4j
+@Service
+@RequiredArgsConstructor
 public class ScheduleService {
 
     private final ScheduleRepository repository;
-
-    public ScheduleService(ScheduleRepository repository) {
-        this.repository = repository;
-    }
 
     public ResponseScheduleDto callSave(RequestScheduleDto RequestScheduleDto) throws SQLException {
         // **요청 값을 서비스에서 검증**
@@ -50,10 +50,12 @@ public class ScheduleService {
     }
 
     public ResponseScheduleDto callFindById(String scheduleId) throws SQLException {
-        Schedule schedule = new Schedule();
-        schedule.setScheduleId(scheduleId);
 
-        Schedule findSchedule = repository.findById(schedule);
+        if (StringUtils.hasText(scheduleId)) {
+            throw new IllegalArgumentException("아이디 입력 필요");
+        }
+
+        Schedule findSchedule = repository.findById(scheduleId);
 
         return new ResponseScheduleDto(findSchedule);
     }
@@ -67,20 +69,32 @@ public class ScheduleService {
         return list;
     }
 
-    public ResponseScheduleDto callUpdate(RequestScheduleDto requestScheduleDto) throws SQLException {
+    public void callUpdate(RequestScheduleDto requestScheduleDto) throws SQLException {
 
-        Schedule schedule = new Schedule(requestScheduleDto);
-        // 비밀번호 확인이 안 됨 findById는 반환이라서
+        log.debug("service schedule={}", requestScheduleDto);
+
         // 비밀번호가 일치하는지 확인
-        if (!(repository.findById(schedule).getSchedulePassword().equals(requestScheduleDto.getSchedulePassword()))) {
+        if (!(repository.findById(requestScheduleDto.getScheduleId()).getSchedulePassword().equals(requestScheduleDto.getSchedulePassword()))) {
             throw new IllegalArgumentException("비밀번호 미일치");
         }
 
-        repository.update(schedule);
-        return new ResponseScheduleDto(repository.findById(schedule));
+        repository.update(requestScheduleDto);
     }
 
-    public void callDelete(RequestScheduleDto requestScheduleDto) {
+    public void callDelete(RequestScheduleDto requestScheduleDto) throws SQLException {
 
+        if (Objects.isNull(requestScheduleDto.getScheduleId())) {
+            throw new IllegalArgumentException("아이디 입력 필요");
+        }
+
+        Schedule findSchedule = repository.findById(requestScheduleDto.getScheduleId());
+        log.debug("service findSchedule={}", findSchedule);
+        log.debug("service requestSchedule={}", requestScheduleDto);
+
+        if (!(findSchedule.getSchedulePassword().equals(requestScheduleDto.getSchedulePassword()))) {
+            throw new IllegalArgumentException("비밀번호 미일치");
+        }
+
+        repository.delete(findSchedule);
     }
 }

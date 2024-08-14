@@ -2,7 +2,6 @@ package com.personaltask.schedulemanagement.domain.schedule.controller;
 
 import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
 import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
-import com.personaltask.schedulemanagement.domain.schedule.entity.Schedule;
 import com.personaltask.schedulemanagement.domain.schedule.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,6 @@ public class ScheduleController {
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
     }
 
     // Get -> @RequestBody X
@@ -66,8 +64,10 @@ public class ScheduleController {
 
         } catch (SQLException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -75,23 +75,38 @@ public class ScheduleController {
 
     // 할 일 담당자명
     // patch vs put
-    @PatchMapping("/update-schedule")
-    public ResponseEntity<ResponseScheduleDto> updateSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
+    @PatchMapping("/edit")
+    public ResponseEntity<Object> updateSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
         try {
-            ResponseScheduleDto result = service.callUpdate(requestScheduleDto);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            service.callUpdate(requestScheduleDto);
+            return new ResponseEntity<>(HttpStatus.OK);
 
         } catch (SQLException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
-//    @DeleteMapping
-//    public void deleteSchedule() {
-//
-//    }
+    @DeleteMapping("/delete")
+    public ResponseEntity<Object> deleteSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
+
+        try {
+            log.info("controller schedule={}", requestScheduleDto);
+
+            service.callDelete(requestScheduleDto);
+
+            return new ResponseEntity<>(HttpStatus.OK);
+
+        } catch (SQLException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
 }
