@@ -125,14 +125,13 @@ public class ScheduleRepository {
      */
     private Schedule getResponseSchedule(Schedule schedule) throws SQLException {
         schedule.setScheduleId(resultSet.getString("schedule_id"));
+        schedule.setSchedulePassword(resultSet.getString("schedule_password"));
         schedule.setTask(resultSet.getString("task"));
         schedule.setAdminName(resultSet.getString("admin_name"));
         schedule.setRegistrationDate(resultSet.getString("registration_date"));
         schedule.setModificationDate(resultSet.getString("modification_date"));
         return schedule;
     }
-
-    // DB -> 종류가 많아요
 
     /**
      * 레벨 3
@@ -142,8 +141,8 @@ public class ScheduleRepository {
 
         String sql = """
                 select * from schedule
-                 where (modification_date = ? or ? is null) and (admin_name = ? or ? is null)
-                 order by modification_date desc;
+                where (date(modification_date) = ? or ? is null) and (admin_name = ? or ? is null)
+                order by modification_date desc;
                 """;
 
         connection = dataSource.getConnection();
@@ -164,13 +163,8 @@ public class ScheduleRepository {
 
         ArrayList<Schedule> scheduleList = new ArrayList<>();
         do {
-            Schedule inputSchedule = new Schedule();
-            inputSchedule.setScheduleId(resultSet.getString("student_id"));
-            inputSchedule.setAdminName(resultSet.getString("admin_name"));
-            inputSchedule.setTask(resultSet.getString("task"));
-            inputSchedule.setRegistrationDate(resultSet.getString("registration_date"));
-            inputSchedule.setModificationDate(resultSet.getString("modification_date"));
-            scheduleList.add(inputSchedule);
+            Schedule addList = getResponseSchedule(new Schedule());
+            scheduleList.add(addList);
         } while (resultSet.next());
 
         return scheduleList;
@@ -185,13 +179,11 @@ public class ScheduleRepository {
      */
     public void update(Schedule schedule) throws SQLException {
 
-        Schedule findSchedule = findById(schedule);
-
         String sql = """
                 update schedule set
-                 modification_date = ?,
-                 task = case when ? is not null and ? <> '' then ? else task end,
-                 admin_name = case when ? is not null and ? <> '' then ? else admin_name end
+                modification_date = ?,
+                task = case when ? is not null and ? <> '' then ? else task end,
+                admin_name = case when ? is not null and ? <> '' then ? else admin_name end
                 where schedule_id = ?;
                 """;
 

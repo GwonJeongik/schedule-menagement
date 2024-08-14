@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -58,21 +60,24 @@ public class ScheduleService {
 
     public List<ResponseScheduleDto> callFindAll(RequestScheduleDto requestScheduleDto) throws SQLException {
 
-        List<ResponseScheduleDto> list = repository.findAll(new Schedule(requestScheduleDto)).stream().map(ResponseScheduleDto::new).toList();
-        log.info("list={}", list);
+        Schedule scheduleParam = new Schedule(requestScheduleDto);
+        List<Schedule> schedules = repository.findAll(scheduleParam);
+
+        List<ResponseScheduleDto> list = schedules.stream().map(ResponseScheduleDto::new).toList();
         return list;
     }
 
-    public void callUpdate(RequestScheduleDto requestScheduleDto) throws SQLException {
+    public ResponseScheduleDto callUpdate(RequestScheduleDto requestScheduleDto) throws SQLException {
 
         Schedule schedule = new Schedule(requestScheduleDto);
-
+        // 비밀번호 확인이 안 됨 findById는 반환이라서
         // 비밀번호가 일치하는지 확인
         if (!(repository.findById(schedule).getSchedulePassword().equals(requestScheduleDto.getSchedulePassword()))) {
             throw new IllegalArgumentException("비밀번호 미일치");
         }
 
         repository.update(schedule);
+        return new ResponseScheduleDto(repository.findById(schedule));
     }
 
     public void callDelete(RequestScheduleDto requestScheduleDto) {

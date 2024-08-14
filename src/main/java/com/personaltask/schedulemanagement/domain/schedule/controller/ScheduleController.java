@@ -61,7 +61,6 @@ public class ScheduleController {
     @GetMapping
     public ResponseEntity<List<ResponseScheduleDto>> findAllSchedule(@ModelAttribute RequestScheduleDto requestScheduleDto) {
         try {
-            log.info("requestDto={}", requestScheduleDto);
             List<ResponseScheduleDto> responseScheduleDtos = service.callFindAll(requestScheduleDto);
             return new ResponseEntity<>(responseScheduleDtos, HttpStatus.OK);
 
@@ -77,10 +76,10 @@ public class ScheduleController {
     // 할 일 담당자명
     // patch vs put
     @PatchMapping("/update-schedule")
-    public void updateSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
-/*
+    public ResponseEntity<ResponseScheduleDto> updateSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
         try {
-            service.callUpdate(requestScheduleDto);
+            ResponseScheduleDto result = service.callUpdate(requestScheduleDto);
+            return new ResponseEntity<>(result, HttpStatus.OK);
 
         } catch (SQLException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -88,7 +87,7 @@ public class ScheduleController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }*/
+        }
     }
 
 //    @DeleteMapping
