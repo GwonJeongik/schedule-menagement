@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
@@ -25,33 +26,34 @@ public class ScheduleService {
 
     private final ScheduleRepository repository;
 
-    public ResponseScheduleDto callSave(RequestScheduleDto RequestScheduleDto) throws SQLException {
-        // **요청 값을 서비스에서 검증**
-        Schedule schedule = new Schedule(RequestScheduleDto);
+    public ResponseScheduleDto callSave(RequestScheduleDto requestScheduleDto) throws SQLException, IOException {
 
         //비밀번호가 비어있으면 X
-        if (schedule.getSchedulePassword().isEmpty()) {
+        if (requestScheduleDto.getSchedulePassword().isEmpty()) {
             throw new IllegalArgumentException("비밀번호 입력 오류");
         }
 
         //할 일이 비어있으면 X
-        if (schedule.getTask().isEmpty()) {
+        if (requestScheduleDto.getTask().isEmpty()) {
             throw new IllegalArgumentException("할 일 입력 오류");
         }
 
         //이름이 비어있으면 X
-        if (schedule.getAdminName().isEmpty()) {
+        if (requestScheduleDto.getAdminName().isEmpty()) {
             throw new IllegalArgumentException("담당자명 입력 오류");
         }
 
         // try catch -> 예외 래핑 -> 처음 발생했던 예외가 감싸져서 디버깅이 힘듦.
-        Schedule saveSchedule = repository.save(schedule);
-        return new ResponseScheduleDto(saveSchedule);
+        int saveScheduleId = repository.save(requestScheduleDto);
+
+        ResponseScheduleDto responseScheduleDto = callFindById(saveScheduleId);
+        log.info("saveResponseDto={}", responseScheduleDto.getScheduleId());
+        return responseScheduleDto;
     }
 
-    public ResponseScheduleDto callFindById(String scheduleId) throws SQLException {
+    public ResponseScheduleDto callFindById(Integer scheduleId) throws SQLException {
 
-        if (StringUtils.hasText(scheduleId)) {
+        if (Objects.isNull(scheduleId)) {
             throw new IllegalArgumentException("아이디 입력 필요");
         }
 
@@ -62,8 +64,7 @@ public class ScheduleService {
 
     public List<ResponseScheduleDto> callFindAll(RequestScheduleDto requestScheduleDto) throws SQLException {
 
-        Schedule scheduleParam = new Schedule(requestScheduleDto);
-        List<Schedule> schedules = repository.findAll(scheduleParam);
+        List<Schedule> schedules = repository.findAll(requestScheduleDto);
 
         List<ResponseScheduleDto> list = schedules.stream().map(ResponseScheduleDto::new).toList();
         return list;

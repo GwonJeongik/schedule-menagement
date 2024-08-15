@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class ResponseScheduleDto {
 
-    private String scheduleId;
+    private Integer scheduleId;
     private String adminName; // 담당자 이름
     private String task; // 할 일
     private String registrationDate; // 작성일

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -33,15 +34,15 @@ public class ScheduleController {
 
         } catch (SQLException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IOException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
     // Get -> @RequestBody X
     // 고유 식별자만 받음
-    @GetMapping("/find-schedule/{scheduleId}")
-    public ResponseEntity<ResponseScheduleDto> findScheduleById(@PathVariable String scheduleId) {
+    @GetMapping("/{scheduleId}")
+    public ResponseEntity<ResponseScheduleDto> findScheduleById(@PathVariable Integer scheduleId) {
 
         try {
             ResponseScheduleDto responseScheduleDto = service.callFindById(scheduleId);
@@ -75,7 +76,7 @@ public class ScheduleController {
 
     // 할 일 담당자명
     // patch vs put
-    @PatchMapping("/edit")
+    @PatchMapping("/{scheduleId}/edit")
     public ResponseEntity<Object> updateSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
         try {
             service.callUpdate(requestScheduleDto);

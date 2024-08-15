@@ -1,20 +1,22 @@
 package com.personaltask.schedulemanagement.domain.schedule.repository;
 
 import com.personaltask.schedulemanagement.domain.schedule.dto.RequestScheduleDto;
-import com.personaltask.schedulemanagement.domain.schedule.dto.ResponseScheduleDto;
 import com.personaltask.schedulemanagement.domain.schedule.entity.Schedule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Repository
 @Slf4j
@@ -36,29 +38,36 @@ public class ScheduleRepository {
      * 레벨 1
      * DB에 schedule을 저장한다.
      */
-    public Schedule save(Schedule schedule) throws SQLException {
+    public int save(RequestScheduleDto requestScheduleDto) throws SQLException, IOException {
 
         try {
             // 신박한 거~ text block(텍스트 블럭)
             String sql = """
-                                insert into Schedule (
-                                  schedule_id,
-                                  schedule_password,
-                                  task,
-                                  admin_name,
-                                  registration_date,
-                                  modification_date) values(?, ?, ?, ?, ?, ?)
+                    insert into Schedule (
+                    schedule_password,
+                    task,
+                    admin_name,
+                    registration_date,
+                    modification_date) values(?, ?, ?, ?, ?)
                     """;
 
             connection = dataSource.getConnection();
-            pstmt = connection.prepareStatement(sql);
+            pstmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 
-            putValueInPstmt(schedule);
+            putValueInPstmt(requestScheduleDto);
 
             pstmt.executeUpdate(); // 쿼리문 실행
 
-            // 저장한 schedule entity를 반환한다.
-            return schedule;
+            resultSet = pstmt.getGeneratedKeys(); // 저장된 고유 키 가져오기
+
+            if (!resultSet.next()) {
+                throw new IOException("저장 후 키 반환 예외");
+            }
+
+            int scheduleId = resultSet.getInt(1);
+            log.info("saveSchedule={}", scheduleId);
+
+            return scheduleId;
 
         } finally {
             // 사용한 자원 정리 -> 역순으로 닫아준다.
@@ -69,30 +78,29 @@ public class ScheduleRepository {
     /**
      * preparedStatement에 쿼리문 value 값을 넣어준다.
      */
-    private void putValueInPstmt(Schedule schedule) throws SQLException {
-        // 스케쥴 아이디 생성 -> uuid 희박한 확률로 겹칠 수 있다. -> 검증 필요 -> autoincrement
-        String scheduleId = UUID.randomUUID().toString();
+    private void putValueInPstmt(RequestScheduleDto schedule) throws SQLException {
+//        스케쥴 아이디 생성 -> uuid 희박한 확률로 겹칠 수 있다. -> 검증 필요 -> autoincrement
+//        String scheduleId = UUID.randomUUID().toString();
+
+//        schedule.setScheduleId(scheduleId);
+//        schedule.setRegistrationDate(date);
+//        schedule.setModificationDate(date);
 
         // 스케쥴 생성 시간 -> 요구사항에 맞게 포멧팅 -> 나노초 부분 삭제
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-        schedule.setScheduleId(scheduleId);
-        schedule.setRegistrationDate(date);
-        schedule.setModificationDate(date);
-
-        pstmt.setString(1, schedule.getScheduleId()); // 고유 id 자동 생성
-        pstmt.setString(2, schedule.getSchedulePassword());
-        pstmt.setString(3, schedule.getTask());
-        pstmt.setString(4, schedule.getAdminName());
-        pstmt.setString(5, schedule.getRegistrationDate()); // 날짜 + 시간
-        pstmt.setString(6, schedule.getModificationDate()); // 날짜 + 시간
+        pstmt.setString(1, schedule.getSchedulePassword());
+        pstmt.setString(2, schedule.getTask());
+        pstmt.setString(3, schedule.getAdminName());
+        pstmt.setString(4, date); // 날짜 + 시간
+        pstmt.setString(5, date); // 날짜 + 시간
     }
 
     /**
      * 레벨 2
      * 아이디로 DB에 저장된 데이터를 찾을 수 있다.
      */
-    public Schedule findById(String scheduleId) throws SQLException {
+    public Schedule findById(int scheduleId) throws SQLException {
 
         String sql = "select * from schedule where schedule_id = ?"; // 실행할 쿼리문 -> 스케쥴 아이디와 일치하는 놈을 찾아온다.
 
@@ -100,7 +108,7 @@ public class ScheduleRepository {
             connection = dataSource.getConnection();
             pstmt = connection.prepareStatement(sql);
 
-            pstmt.setString(1, scheduleId);
+            pstmt.setInt(1, scheduleId);
 
             pstmt.execute(); // 실행
 
@@ -125,7 +133,7 @@ public class ScheduleRepository {
      */
     private Schedule getResponseSchedule() throws SQLException {
         Schedule findSchedule = new Schedule();
-        findSchedule.setScheduleId(resultSet.getString("schedule_id"));
+        findSchedule.setScheduleId(resultSet.getInt("schedule_id"));
         findSchedule.setSchedulePassword(resultSet.getString("schedule_password"));
         findSchedule.setTask(resultSet.getString("task"));
         findSchedule.setAdminName(resultSet.getString("admin_name"));
@@ -138,7 +146,7 @@ public class ScheduleRepository {
      * 레벨 3
      * 조건을 바탕으로 일정 목록 모두 조회
      */
-    public List<Schedule> findAll(Schedule schedule) throws SQLException {
+    public List<Schedule> findAll(RequestScheduleDto requestScheduleDto) throws SQLException {
 
         String sql = """
                 select * from schedule
@@ -149,17 +157,17 @@ public class ScheduleRepository {
         connection = dataSource.getConnection();
         pstmt = connection.prepareStatement(sql);
 
-        pstmt.setString(1, schedule.getModificationDate());
-        pstmt.setString(2, schedule.getModificationDate());
-        pstmt.setString(3, schedule.getAdminName());
-        pstmt.setString(4, schedule.getAdminName());
+        pstmt.setString(1, requestScheduleDto.getModificationDate());
+        pstmt.setString(2, requestScheduleDto.getModificationDate());
+        pstmt.setString(3, requestScheduleDto.getAdminName());
+        pstmt.setString(4, requestScheduleDto.getAdminName());
 
         pstmt.execute();
 
         resultSet = pstmt.getResultSet();
 
         if (!resultSet.next()) {
-            throw new NoSuchElementException("등록된 스케쥴이 없습니다. 요청 수정일: " + schedule.getModificationDate());
+            throw new NoSuchElementException("등록된 스케쥴이 없습니다. 요청 수정일: " + requestScheduleDto.getModificationDate());
         }
 
         ArrayList<Schedule> scheduleList = new ArrayList<>();
@@ -202,7 +210,7 @@ public class ScheduleRepository {
         pstmt.setString(5, requestScheduleDto.getAdminName());
         pstmt.setString(6, requestScheduleDto.getAdminName());
         pstmt.setString(7, requestScheduleDto.getAdminName());
-        pstmt.setString(8, requestScheduleDto.getScheduleId());
+        pstmt.setInt(8, requestScheduleDto.getScheduleId());
 
         // 변경 쿼리 실행
         pstmt.execute();
@@ -214,7 +222,7 @@ public class ScheduleRepository {
         connection = dataSource.getConnection();
         pstmt = connection.prepareStatement(sql);
 
-        pstmt.setString(1, schedule.getScheduleId());
+        pstmt.setInt(1, schedule.getScheduleId());
 
         pstmt.execute();
     }

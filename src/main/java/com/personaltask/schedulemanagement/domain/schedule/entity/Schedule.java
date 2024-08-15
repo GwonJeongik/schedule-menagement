@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Schedule {
 
-    private String scheduleId;
+    private Integer scheduleId;
     private String schedulePassword;
     private String adminName;
     private String task;

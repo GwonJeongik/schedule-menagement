@@ -1,6 +1,6 @@
 create table schedule
 (
-    schedule_id       varchar(36),
+    schedule_id       int auto_increment,
     schedule_password varchar(10),
     task              varchar(20),
     admin_name        varchar(10),

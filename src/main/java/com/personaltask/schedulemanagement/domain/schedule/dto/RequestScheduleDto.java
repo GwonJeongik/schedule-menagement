@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class RequestScheduleDto {
 
-    private String scheduleId;
+    private Integer scheduleId;
     private String schedulePassword; // 비밀번호
     private String adminName; // 담당자 이름
     private String task; // 할 일
