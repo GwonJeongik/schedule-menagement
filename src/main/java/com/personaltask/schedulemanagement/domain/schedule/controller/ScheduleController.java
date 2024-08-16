@@ -42,7 +42,7 @@ public class ScheduleController {
     // Get -> @RequestBody X
     // 고유 식별자만 받음
     @GetMapping("/{scheduleId}")
-    public ResponseEntity<ResponseScheduleDto> findScheduleById(@PathVariable Integer scheduleId) {
+    public ResponseEntity<ResponseScheduleDto> findScheduleById(@PathVariable int scheduleId) {
 
         try {
             ResponseScheduleDto responseScheduleDto = service.callFindById(scheduleId);
@@ -58,7 +58,9 @@ public class ScheduleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ResponseScheduleDto>> findAllSchedule(@ModelAttribute RequestScheduleDto requestScheduleDto) {
+    public ResponseEntity<List<ResponseScheduleDto>> findAllSchedule(
+            @ModelAttribute RequestScheduleDto requestScheduleDto
+    ) {
         try {
             List<ResponseScheduleDto> responseScheduleDtos = service.callFindAll(requestScheduleDto);
             return new ResponseEntity<>(responseScheduleDtos, HttpStatus.OK);
@@ -77,29 +79,35 @@ public class ScheduleController {
     // 할 일 담당자명
     // patch vs put
     @PatchMapping("/{scheduleId}/edit")
-    public ResponseEntity<Object> updateSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
+    public ResponseEntity<ResponseScheduleDto> updateSchedule(
+            @PathVariable int scheduleId,
+            @RequestBody RequestScheduleDto requestScheduleDto
+    ) {
         try {
-            service.callUpdate(requestScheduleDto);
-            return new ResponseEntity<>(HttpStatus.OK);
+            ResponseScheduleDto responseScheduleDto = service.callUpdate(scheduleId, requestScheduleDto);
+            return new ResponseEntity<>(responseScheduleDto, HttpStatus.OK);
 
         } catch (SQLException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<Object> deleteSchedule(@RequestBody RequestScheduleDto requestScheduleDto) {
+    @DeleteMapping("/{scheduleId}/delete")
+    public ResponseEntity<Object> deleteSchedule(
+            @PathVariable int scheduleId,
+            @RequestBody RequestScheduleDto requestScheduleDto
+    ) {
 
         try {
-            log.info("controller schedule={}", requestScheduleDto);
+            log.debug("controller schedule={}", requestScheduleDto);
 
-            service.callDelete(requestScheduleDto);
+            service.callDelete(scheduleId, requestScheduleDto);
 
             return new ResponseEntity<>(HttpStatus.OK);
 

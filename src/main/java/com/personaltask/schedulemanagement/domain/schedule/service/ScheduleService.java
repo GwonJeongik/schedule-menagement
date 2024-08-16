@@ -7,13 +7,11 @@ import com.personaltask.schedulemanagement.domain.schedule.repository.ScheduleRe
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
-
 
 
 // 제네릭은 좀 무겁다.
@@ -43,19 +41,16 @@ public class ScheduleService {
             throw new IllegalArgumentException("담당자명 입력 오류");
         }
 
-        // try catch -> 예외 래핑 -> 처음 발생했던 예외가 감싸져서 디버깅이 힘듦.
+        // try catch -> 예외 래핑 -> 처음 발생했던 예외가 감싸져서 디버깅이 힘듦. -> controller에서 처리?
         int saveScheduleId = repository.save(requestScheduleDto);
 
         ResponseScheduleDto responseScheduleDto = callFindById(saveScheduleId);
-        log.info("saveResponseDto={}", responseScheduleDto.getScheduleId());
+        log.debug("saveResponseDto={}", responseScheduleDto.getScheduleId());
+
         return responseScheduleDto;
     }
 
-    public ResponseScheduleDto callFindById(Integer scheduleId) throws SQLException {
-
-        if (Objects.isNull(scheduleId)) {
-            throw new IllegalArgumentException("아이디 입력 필요");
-        }
+    public ResponseScheduleDto callFindById(int scheduleId) throws SQLException {
 
         Schedule findSchedule = repository.findById(scheduleId);
 
@@ -66,11 +61,12 @@ public class ScheduleService {
 
         List<Schedule> schedules = repository.findAll(requestScheduleDto);
 
-        List<ResponseScheduleDto> list = schedules.stream().map(ResponseScheduleDto::new).toList();
-        return list;
+        return schedules.stream().map(ResponseScheduleDto::new).toList();
     }
 
-    public void callUpdate(RequestScheduleDto requestScheduleDto) throws SQLException {
+    public ResponseScheduleDto callUpdate(int scheduleId, RequestScheduleDto requestScheduleDto) throws SQLException {
+
+        requestScheduleDto.setScheduleId(scheduleId);
 
         log.debug("service schedule={}", requestScheduleDto);
 
@@ -80,17 +76,18 @@ public class ScheduleService {
         }
 
         repository.update(requestScheduleDto);
+
+        return callFindById(requestScheduleDto.getScheduleId());
     }
 
-    public void callDelete(RequestScheduleDto requestScheduleDto) throws SQLException {
+    public void callDelete(int scheduleId, RequestScheduleDto requestScheduleDto) throws SQLException {
 
-        if (Objects.isNull(requestScheduleDto.getScheduleId())) {
-            throw new IllegalArgumentException("아이디 입력 필요");
-        }
+        requestScheduleDto.setScheduleId(scheduleId);
 
         Schedule findSchedule = repository.findById(requestScheduleDto.getScheduleId());
-        log.debug("service findSchedule={}", findSchedule);
+
         log.debug("service requestSchedule={}", requestScheduleDto);
+        log.debug("service findSchedule={}", findSchedule);
 
         if (!(findSchedule.getSchedulePassword().equals(requestScheduleDto.getSchedulePassword()))) {
             throw new IllegalArgumentException("비밀번호 미일치");

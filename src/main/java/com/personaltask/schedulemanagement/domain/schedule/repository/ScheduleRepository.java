@@ -5,6 +5,7 @@ import com.personaltask.schedulemanagement.domain.schedule.entity.Schedule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -65,7 +66,7 @@ public class ScheduleRepository {
             }
 
             int scheduleId = resultSet.getInt(1);
-            log.info("saveSchedule={}", scheduleId);
+            log.debug("saveSchedule={}", scheduleId);
 
             return scheduleId;
 
@@ -148,31 +149,47 @@ public class ScheduleRepository {
      */
     public List<Schedule> findAll(RequestScheduleDto requestScheduleDto) throws SQLException {
 
-        String sql = """
-                select * from schedule
-                where (date(modification_date) = ? or ? is null) and (admin_name = ? or ? is null)
-                order by modification_date desc;
-                """;
+        // WHERE 1=1 는 항상 참
+        StringBuilder sql = new StringBuilder("select * from schedule where 1=1");
+
+        if (StringUtils.hasText(requestScheduleDto.getModificationDate())) {
+            log.debug("modification={}", requestScheduleDto.getModificationDate());
+            sql.append(" and date(modification_date) = ?");
+        }
+
+        if (StringUtils.hasText(requestScheduleDto.getAdminName())) {
+            log.debug("adminName={}", requestScheduleDto.getAdminName());
+            sql.append(" and admin_name = ?");
+        }
+
+        sql.append(" order by modification_date desc");
 
         connection = dataSource.getConnection();
-        pstmt = connection.prepareStatement(sql);
+        pstmt = connection.prepareStatement(sql.toString());
 
-        pstmt.setString(1, requestScheduleDto.getModificationDate());
-        pstmt.setString(2, requestScheduleDto.getModificationDate());
-        pstmt.setString(3, requestScheduleDto.getAdminName());
-        pstmt.setString(4, requestScheduleDto.getAdminName());
+        int index = 1;
+        if (StringUtils.hasText(requestScheduleDto.getModificationDate())) {
+            pstmt.setString(index++, requestScheduleDto.getModificationDate());
+        }
+
+        if (StringUtils.hasText(requestScheduleDto.getAdminName())) {
+            pstmt.setString(index, requestScheduleDto.getAdminName());
+        }
 
         pstmt.execute();
 
         resultSet = pstmt.getResultSet();
 
         if (!resultSet.next()) {
-            throw new NoSuchElementException("등록된 스케쥴이 없습니다. 요청 수정일: " + requestScheduleDto.getModificationDate());
+            throw new NoSuchElementException("등록된 스케쥴이 없습니다. 요청 수정일: " +
+                    requestScheduleDto.getModificationDate() +
+                    "담당자명: " + requestScheduleDto.getAdminName());
         }
 
         ArrayList<Schedule> scheduleList = new ArrayList<>();
         do {
             Schedule addList = getResponseSchedule();
+            log.info("addList={}", addList);
             scheduleList.add(addList);
         } while (resultSet.next());
 
@@ -198,7 +215,8 @@ public class ScheduleRepository {
 
         connection = dataSource.getConnection();
         pstmt = connection.prepareStatement(sql);
-        log.info("repository schedule={}", requestScheduleDto);
+
+        log.debug("repository schedule={}", requestScheduleDto);
 
         // 수정일 현재로 변경
         String newModificationDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -216,6 +234,10 @@ public class ScheduleRepository {
         pstmt.execute();
     }
 
+    /**
+     * 레벨 5
+     * 아이디와 비밀번호를 받아서 삭제
+     */
     public void delete(Schedule schedule) throws SQLException {
         String sql = "delete from schedule where schedule_id = ?";
 
