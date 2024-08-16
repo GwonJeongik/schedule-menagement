@@ -149,7 +149,7 @@ public class ScheduleRepository {
      */
     public List<Schedule> findAll(RequestScheduleDto requestScheduleDto) throws SQLException {
 
-        // WHERE 1=1 는 항상 참
+        // WHERE 1=1 는 항상 참.
         StringBuilder sql = new StringBuilder("select * from schedule where 1=1");
 
         if (StringUtils.hasText(requestScheduleDto.getModificationDate())) {
